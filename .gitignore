@@ -1,0 +1,6 @@
+*.mat
+*.mov
+*.key
+*.tmp
+~$*
+.DS_Store
