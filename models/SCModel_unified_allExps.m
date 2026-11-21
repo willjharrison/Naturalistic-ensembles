@@ -24,12 +24,15 @@ clear; close all; clc;
 tStart = tic;
 
 %% 1. Paths & Configuration
-thingsRoot = '/Users/wharrison/Desktop/removed_domain_49A1B3CB-5689-4D03-A900-D7CC29B8FF62/Research/THINGSimages';
+thingsRoots = { ...
+    '/Users/wharrison/Library/CloudStorage/OneDrive-UniversityoftheSunshineCoast/Research/THINGSimages', ...
+    '/Users/wharrison/Desktop/removed_domain_49A1B3CB-5689-4D03-A900-D7CC29B8FF62/Research/THINGSimages'};
 dtdRoot    = '/Users/wharrison/Desktop/removed_domain_49A1B3CB-5689-4D03-A900-D7CC29B8FF62/Research/dtd';
 modImsDir  = '../Matlab/Analysis/SCmodel/modIms';
 
-assert(exist(thingsRoot, 'dir') == 7, 'THINGSimages folder not found: %s', thingsRoot);
-assert(exist(dtdRoot, 'dir')    == 7, 'DTD folder not found: %s', dtdRoot);
+thingsRoots = thingsRoots(cellfun(@(p) exist(p, 'dir') == 7, thingsRoots));
+assert(~isempty(thingsRoots), 'No THINGSimages folder found.');
+assert(exist(dtdRoot, 'dir') == 7, 'DTD folder not found: %s', dtdRoot);
 
 expDirs = { ...
     '../Matlab/Output', ...
@@ -55,9 +58,13 @@ end
 nConfigs = size(cfgList, 1);
 
 %% 2. Pre-Index THINGSimages & DTD Once
-fprintf('Indexing THINGSimages and dtd folders...\n');
-tFiles = dir(fullfile(thingsRoot, '**', '*.*'));
-tFiles = tFiles(~[tFiles.isdir]);
+fprintf('Indexing THINGSimages (%d dir[s]) and dtd folders...\n', numel(thingsRoots));
+tFiles = [];
+for trIdx = 1:numel(thingsRoots)
+    tf = dir(fullfile(thingsRoots{trIdx}, '**', '*.*'));
+    tf = tf(~[tf.isdir]);
+    tFiles = [tFiles; tf]; %#ok<AGROW>
+end
 dFiles = dir(fullfile(dtdRoot, '**', '*.*'));
 dFiles = dFiles(~[dFiles.isdir]);
 
@@ -74,7 +81,7 @@ for i = 1:numel(dFiles)
 end
 [uniqKeys, ia] = unique(allKeys, 'stable');
 fileMap = containers.Map(uniqKeys, allVals(ia));
-fprintf('Indexed %d unique image files (%d THINGS, %d DTD).\n', numel(uniqKeys), numel(tFiles), numel(dFiles));
+fprintf('Indexed %d unique image files (%d THINGS entries, %d DTD).\n', numel(uniqKeys), numel(tFiles), numel(dFiles));
 
 %% 3. Collect All Valid Files Across Experiments 1-3 & Pre-Resolve Image Paths
 fileMeta = struct('expID', {}, 'fileLoop', {}, 'path', {}, 'name', {}, 'nTrials', {}, 'p1List', {}, 'p2List', {}, 'validMask', {});
